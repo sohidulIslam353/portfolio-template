@@ -1,6 +1,6 @@
 name: Push-to-EC2
 
-# Trigger deployment only on push to main branch
+# Trigger deployment only on push to the master branch
 on:
   push:
     branches:
@@ -12,23 +12,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository code
       - name: Checkout the files
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # Updated to v3 to address node12 deprecation
 
+      # Step 2: Deploy files to EC2 using easingthemes/ssh-deploy
       - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}   # Ensure this is base64-encoded
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: ${{ secrets.TARGET_DIR }}
 
-      - name: Executing remote ssh commands using ssh key
+      # Step 3: Run remote commands on EC2 using appleboy/ssh-action
+      - name: Executing remote SSH commands using ssh key
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_DNS }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY }}   # Ensure correct format of SSH key
           script: |
             sudo apt-get -y update
             sudo apt-get install -y apache2
