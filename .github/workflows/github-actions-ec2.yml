@@ -33,9 +33,19 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}   # Ensure correct format of SSH key
           script: |
-            sudo apt-get -y update
-            sudo apt-get install -y apache2
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
+            # Check if Apache2 is running and install/start if necessary
+            if ! systemctl is-active --quiet apache2; then
+              sudo apt-get -y update
+              sudo apt-get install -y apache2
+              sudo systemctl start apache2
+              sudo systemctl enable apache2
+            else
+              echo "Apache2 is already running."
+            fi
+
+            # Remove old files from /var/www/html before moving new ones
+            sudo rm -rf /var/www/html/*
+
+            # Move new files to /var/www/html
             cd home
             sudo mv * /var/www/html
